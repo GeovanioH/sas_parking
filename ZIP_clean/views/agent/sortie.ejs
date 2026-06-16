@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Traiter Sortie — SAS Parking</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdn.fedapay.com/checkout.js?v=1.1.7"></script>
+</head>
+
+<body>
+  <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+
+  <div class="app-layout">
+    <%- include('../composants/sidebar_agent', { page: 'sortie' , agentNom, agentPrenom, agentSite, agentVille }) %>
+
+      <div class="main-content">
+        <!-- TOPBAR -->
+        <div class="topbar">
+          <div class="topbar-left">
+            <div class="topbar-title">Traiter une Sortie</div>
+            <div class="topbar-sub">Clôture de session de garde</div>
+          </div>
+          <div class="topbar-right">
+            <div class="topbar-user">
+              <div class="topbar-avatar">
+                <%= (agentNom||'A')[0].toUpperCase() %>
+              </div>
+              <div>
+                <div class="topbar-user-name">
+                  <%= agentNom %>
+                    <%= agentPrenom %>
+                </div>
+                <div class="topbar-user-role">Agent · <%= agentSite %>
+                </div>
+              </div>
+              <div class="topbar-online-dot"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="page-body">
+
+          <% if (error) { %>
+            <div class="alert alert-error alert-auto-dismiss"><span>⚠️</span><span>
+                <%= error %>
+              </span></div>
+            <% } %>
+
+              <!-- STEPPER -->
+              <div class="stepper"
+                style="display:flex;align-items:center;gap:0;margin-bottom:28px;background:white;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden">
+                <div class="step-item <%= !session ? 'active' : 'done' %>"
+                  style="flex:1;padding:16px;text-align:center;border-right:1px solid #e5e7eb;background:<%= !session ? '#f0fdf4' : '#f9fafb' %>">
+                  <div style="font-size:20px">
+                    <%= !session ? '🔍' : '✅' %>
+                  </div>
+                  <div
+                    style="font-weight:700;font-size:13px;margin-top:4px;color:<%= !session ? '#15803d' : '#6b7280' %>">
+                    1. PLAQUE</div>
+                  <div style="font-size:11px;color:#9ca3af">Recherche du véhicule</div>
+                </div>
+                <div class="step-item <%= session ? 'active' : ''%>"
+                  style="flex:1;padding:16px;text-align:center;border-right:1px solid #e5e7eb;background:<%= session ? '#f0fdf4' : 'white' %>">
+                  <div style="font-size:20px">
+                    <%= session ? '💳' : '⏳' %>
+                  </div>
+                  <div
+                    style="font-weight:700;font-size:13px;margin-top:4px;color:<%= session ? '#15803d' : '#d1d5db' %>">
+                    2. MODE</div>
+                  <div style="font-size:11px;color:#9ca3af">Mode de paiement</div>
+                </div>
+                <div class="step-item" style="flex:1;padding:16px;text-align:center;background:white">
+                  <div style="font-size:20px">🎉</div>
+                  <div style="font-weight:700;font-size:13px;margin-top:4px;color:#d1d5db">3. CONFIRMATION</div>
+                  <div style="font-size:11px;color:#9ca3af">Clôture & reçu</div>
+                </div>
+              </div>
+
+              <% if (!session) { %>
+                <!-- ÉTAPE 1 : RECHERCHE -->
+                <div class="card">
+                  <div class="card-header">
+                    <div>
+                      <div class="card-title">🔍 Rechercher un véhicule</div>
+                      <div class="card-sub">Par numéro de plaque ou code de garde</div>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <form action="/agent/sortie" method="GET" style="max-width:480px">
+                      <div class="form-group">
+                        <label class="form-label" style="font-weight:700">Numéro de plaque</label>
+                        <input pattern="[A-Za-z]{3}\s?[0-9]{3}\s?[A-Za-z]{1}" name="plaque"
+                          oninput="this.value=this.value.toUpperCase()" maxlength="9" class="form-control"
+                          style="font-size:18px;font-family:monospace;font-weight:700;text-align:center;letter-spacing:3px;text-transform:uppercase;height:52px"
+                          value="<%= plaque %>" placeholder="ABC 123 D" autocapitalize="characters">
+                      </div>
+                      <div style="text-align:center;color:#9ca3af;font-size:13px;margin:-8px 0 16px">— ou —</div>
+                      <div class="form-group">
+                        <label class="form-label" style="font-weight:700">Code de garde (code_hex)</label>
+                        <input type="text" name="code" class="form-control"
+                          style="font-size:18px;font-family:monospace;font-weight:700;text-align:center;letter-spacing:3px;text-transform:uppercase;height:52px"
+                          value="<%= code %>" placeholder="A3F7-C2B1" autocapitalize="characters" maxlength="9">
+                      </div>
+                      <button type="submit" class="btn btn-primary btn-full" style="height:52px;font-size:16px">
+                        🔍 Rechercher le véhicule
+                      </button>
+                    </form>
+                  </div>
+                </div>
+
+                <% } else { %>
+                  <!-- ÉTAPE 2 : VÉHICULE TROUVÉ + MODE PAIEMENT -->
+                  <div class="grid-2" style="align-items:start">
+
+                    <!-- Infos véhicule -->
+                    <div class="card">
+                      <div class="card-header">
+                        <div class="card-title"><svg width="18" height="18" fill="none" stroke="currentColor"
+                            stroke-width="2" viewBox="0 0 24 24">
+                            <circle cx="6" cy="17" r="3" />
+                            <circle cx="18" cy="17" r="3" />
+                            <path d="M6 17l4-7h4l2-3M14 10l2 7" />
+                          </svg> Véhicule trouvé</div>
+                        <span class="badge badge-green">✅ En garde</span>
+                      </div>
+                      <div class="card-body">
+                        <!-- Plaque en grand -->
+                        <div
+                          style="background:#f0fdf4;border:2px solid #22c55e;border-radius:10px;padding:16px 24px;text-align:center;margin-bottom:20px">
+                          <div
+                            style="font-size:32px;font-family:monospace;font-weight:800;color:#15803d;letter-spacing:3px">
+                            <%= session.plaque %>
+                          </div>
+                          <div style="font-size:13px;color:#6b7280;margin-top:4px">Code : <strong
+                              class="code-hex-display" style="cursor:pointer">
+                              <%= session.code_hex %>
+                            </strong></div>
+                        </div>
+
+                        <!-- Détails -->
+                        <div style="display:flex;flex-direction:column;gap:8px;font-size:14px">
+                          <div
+                            style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f4f6">
+                            <span style="color:#6b7280">Client</span>
+                            <span style="font-weight:600">
+                              <%= session.nom_client || '—' %>
+                                <%= session.prenom_client || '' %>
+                            </span>
+                          </div>
+                          <div
+                            style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f4f6">
+                            <span style="color:#6b7280">Téléphone</span>
+                            <span>
+                              <%= session.telephone_client || '—' %>
+                            </span>
+                          </div>
+                          <div
+                            style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f4f6">
+                            <span style="color:#6b7280">Entrée</span>
+                            <span>
+                              <%= new
+                                Date(session.heure_entree).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})
+                                %> — <%= new Date(session.heure_entree).toLocaleDateString('fr-FR') %>
+                            </span>
+                          </div>
+                          <div
+                            style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f4f6">
+                            <span style="color:#6b7280">Durée actuelle</span>
+                            <span style="font-weight:600;color:#15803d"
+                              data-entree="<%= session.heure_entree %>">Calcul...</span>
+                          </div>
+                          <% if (tarif) { %>
+                            <div
+                              style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f4f6">
+                              <span style="color:#6b7280">Tarif appliqué</span>
+                              <span>
+                                <%= Number(tarif.prix_tarif).toLocaleString('fr-FR') %> FCFA (<%=
+                                    tarif.mode_tarifaire==='heure' ? 'par heure' : 'garde fixe' %>)
+                              </span>
+                            </div>
+                            <% } %>
+                              <div style="display:flex;justify-content:space-between;padding:10px 0;align-items:center">
+                                <span style="color:#6b7280;font-weight:600">MONTANT DÛ</span>
+                                <span style="font-size:24px;font-weight:800;color:#15803d">
+                                  <%= montant ? Number(montant).toLocaleString('fr-FR') : '—' %> <span
+                                      style="font-size:14px">FCFA</span>
+                                </span>
+                              </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Mode de paiement + confirmation -->
+                    <div class="card">
+                      <div class="card-header">
+                        <div class="card-title">💳 Mode de paiement</div>
+                        <div class="card-sub">Sélectionnez et confirmez</div>
+                      </div>
+                      <div class="card-body">
+                        <form action="/agent/sortie/<%= session.id %>" method="POST">
+
+                          <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:24px">
+                            <!-- Mobile Money -->
+                            <div class="payment-option" data-mode="mobile" onclick="selectPayment('mobile')"
+                              style="padding:20px;border-radius:12px;cursor:pointer;transition:.2s">
+                              <div style="display:flex;align-items:center;gap:16px">
+                                <div style="font-size:36px">📱</div>
+                                <div>
+                                  <div style="font-weight:700;font-size:16px">Mobile Money</div>
+                                  <div style="font-size:12px;color:#6b7280">MTN, Moov, Airtel Money</div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <!-- Espèces -->
+                            <div class="payment-option selected" data-mode="especes" onclick="selectPayment('especes')"
+                              style="padding:20px;border-radius:12px;cursor:pointer;transition:.2s">
+                              <div style="display:flex;align-items:center;gap:16px">
+                                <div style="font-size:36px">💵</div>
+                                <div>
+                                  <div style="font-weight:700;font-size:16px">Espèces</div>
+                                  <div style="font-size:12px;color:#6b7280">Paiement en cash sur place</div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <input type="hidden" name="mode" id="modeInput" value="especes">
+
+                          <!-- Récap montant -->
+                          <div
+                            style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px;padding:16px;text-align:center;margin-bottom:16px">
+                            <div style="font-size:13px;color:#6b7280;margin-bottom:4px">Montant à encaisser</div>
+                            <div style="font-size:28px;font-weight:800;color:#15803d">
+                              <%= montant ? Number(montant).toLocaleString('fr-FR') : '—' %> FCFA
+                            </div>
+                          </div>
+
+                          <% if (session) { %>
+  <button type="button" id="btnPayer" class="btn btn-primary btn-full"
+    style="height:52px;font-size:16px;font-weight:700"
+    data-session="<%= session.id %>"
+    data-montant="<%= montant %>"
+    data-mode="<%= session.mode || 'especes' %>">
+    Confirmer la sortie
+  </button>
+<% } %>
+                        </form>
+
+                        <a href="/agent/sortie" class="btn btn-outline btn-full" style="margin-top:10px">
+                          ← Nouvelle recherche
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                  <% } %>
+
+        </div><!-- /page-body -->
+
+        <div class="page-footer">
+          <span>© <%= new Date().getFullYear() %> SAS Parking. Tous droits réservés.</span>
+          <div class="footer-links">
+            <a href="#">Support</a>
+            <span style="color:#9ca3af">Powered by FedaPay</span>
+          </div>
+        </div>
+      </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+document.getElementById('btnPayer')?.addEventListener('click', function() {
+  const mode    = document.getElementById('modeInput').value;
+  const montant = <%= montant || 0 %>;
+const sessionId = <% if (session) { %><%= session.id %><% } else { %>0<% } %>;
+  if (mode === 'mobile') {
+    // Ouvrir widget FedaPay
+    FedaPay.init({
+      public_key: '<%= fedapayPublicKey %>',
+      transaction: {
+        amount:      montant,
+        description: 'Garde véhicule <%= session ? session.plaque : "" %>'
+      },
+      customer: {
+        phone_number: {
+          number:  '<%= session ? session.telephone_client : "" %>',
+          country: 'BJ'
+        }
+      },
+      onComplete: function(resp) {
+        if (resp.reason === FedaPay.DIALOG_DISMISSED) {
+          alert('Paiement annulé.');
+          return;
+        }
+        // Soumettre le formulaire après paiement réussi
+        document.querySelector('form').submit();
+      }
+    }).open();
+  } else {
+    // Espèces — confirmation directe
+    if (confirm('Confirmer la clôture de cette session ?')) {
+      document.querySelector('form').submit();
+    }
+  }
+});
+</script>
+</body>
+
+</html>

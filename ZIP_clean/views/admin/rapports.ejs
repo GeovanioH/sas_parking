@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Rapports Financiers — SAS Parking</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+<div class="app-layout">
+  <%- include('../composants/sidebar_admin', { page:'rapports', adminNom, adminPrenom }) %>
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Rapports Financiers</div>
+        <div class="topbar-sub">Analyse de performance — <%= adminSite %></div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-user">
+          <div class="topbar-avatar"><%= (adminNom||'A')[0].toUpperCase() %></div>
+          <div><div class="topbar-user-name"><%= adminNom %> <%= adminPrenom %></div><div class="topbar-user-role">Administrateur</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <!-- HERO -->
+      <div class="hero-banner" style="margin-bottom:24px">
+        <div class="hero-title">Analyse de Performance</div>
+        <div class="hero-subtitle">Visualisez la santé financière de votre site en temps réel.</div>
+        <div style="margin-top:14px;font-size:22px;font-weight:800">
+          <%= Number(total.recettes).toLocaleString('fr-FR') %> FCFA
+          <span style="font-size:13px;font-weight:500;opacity:.8;margin-left:8px">sur les <%= periode %> derniers jours</span>
+        </div>
+      </div>
+
+      <!-- FILTRES -->
+      <div class="card mb-24">
+        <div class="card-body">
+          <form method="GET" action="/rapports" style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end">
+            <div class="form-group" style="margin:0">
+              <label class="form-label">Période</label>
+              <select name="periode" class="form-control">
+                <option value="7"  <%= periode=='7'  ?'selected':'' %>>7 derniers jours</option>
+                <option value="30" <%= periode=='30' ?'selected':'' %>>30 derniers jours</option>
+                <option value="90" <%= periode=='90' ?'selected':'' %>>3 derniers mois</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin:0">
+              <label class="form-label">Du</label>
+              <input type="date" name="date_debut" class="form-control" value="<%= dateDebut %>">
+            </div>
+            <div class="form-group" style="margin:0">
+              <label class="form-label">Au</label>
+              <input type="date" name="date_fin" class="form-control" value="<%= dateFin %>">
+            </div>
+            <button type="submit" class="btn btn-primary">Appliquer</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div class="stats-grid" style="margin-bottom:24px">
+        <div class="stat-card"><div class="stat-icon green">💰</div><div class="stat-value"><%= Number(total.recettes).toLocaleString('fr-FR') %></div><div class="stat-label">Total FCFA encaissé</div></div>
+        <div class="stat-card"><div class="stat-icon blue">📋</div><div class="stat-value"><%= total.sessions %></div><div class="stat-label">Sessions clôturées</div></div>
+        <div class="stat-card"><div class="stat-icon orange">📱</div><div class="stat-value"><%= total.nb_mobile %></div><div class="stat-label">Paiements Mobile Money</div></div>
+        <div class="stat-card"><div class="stat-icon purple">💵</div><div class="stat-value"><%= total.nb_especes %></div><div class="stat-label">Paiements Espèces</div></div>
+      </div>
+
+      <!-- GRAPHIQUES -->
+      <div class="grid-2" style="align-items:start;margin-bottom:24px">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Recettes — <%= periode %> derniers jours</div><div class="card-sub">Évolution journalière en FCFA</div></div>
+          </div>
+          <div class="card-body"><div style="height:240px"><canvas id="barChart"></canvas></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Répartition par Paiement</div><div class="card-sub">Préférence des utilisateurs</div></div>
+          </div>
+          <div class="card-body">
+            <div style="height:200px"><canvas id="donutChart"></canvas></div>
+            <div style="display:flex;justify-content:center;gap:24px;margin-top:12px;font-size:13px">
+              <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:50%;background:#22c55e;display:inline-block"></span>Mobile Money <strong><%= total.sessions > 0 ? Math.round(total.nb_mobile/total.sessions*100) : 0 %>%</strong></span>
+              <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:50%;background:#94a3b8;display:inline-block"></span>Espèces <strong><%= total.sessions > 0 ? Math.round(total.nb_especes/total.sessions*100) : 0 %>%</strong></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAR AGENT -->
+      <% if (parAgentData.length > 0) { %>
+      <div class="card mb-24">
+        <div class="card-header"><div class="card-title">Performance par Agent</div></div>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Agent</th><th>Sessions</th><th>Total encaissé</th></tr></thead>
+            <tbody>
+              <% parAgentData.forEach(a => { %>
+                <tr>
+                  <td style="font-weight:600"><%= a.nom_agent %></td>
+                  <td><%= a.nb_sessions %></td>
+                  <td style="color:#15803d;font-weight:700"><%= Number(a.total).toLocaleString('fr-FR') %> FCFA</td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <% } %>
+
+      <!-- JOURNAL TRANSACTIONS -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Journal des Transactions</div>
+            <div class="card-sub">Liste détaillée des sessions clôturées et vérifiées</div>
+          </div>
+          <span class="badge badge-green">Validé par Admin</span>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>Agent</th><th>Véhicule</th><th>Code</th><th>Entrée</th><th>Sortie</th><th>Durée</th><th>Montant</th><th>Paiement</th></tr>
+            </thead>
+            <tbody>
+              <% if (dernieres.length === 0) { %>
+                <tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:24px">Aucune transaction sur cette période</td></tr>
+              <% } %>
+              <% dernieres.forEach(s => {
+                   const e  = new Date(s.heure_entree);
+                   const so = s.heure_sortie ? new Date(s.heure_sortie) : null;
+                   const dMs = so ? so-e : 0;
+                   const dh  = Math.floor(dMs/3600000);
+                   const dm  = Math.floor((dMs%3600000)/60000);
+                   const dur = dh > 0 ? `${dh}h ${dm}m` : `${dm}m`;
+              %>
+                <tr>
+                  <td><%= s.agent_nom %></td>
+                  <td><span class="badge-plaque"><%= s.plaque %></span></td>
+                  <td style="font-family:monospace;font-size:12px;color:#15803d"><%= s.code_hex %></td>
+                  <td><%= e.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) %></td>
+                  <td><%= so ? so.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '—' %></td>
+                  <td><%= so ? dur : '—' %></td>
+                  <td style="color:#15803d;font-weight:700"><%= Number(s.montant||0).toLocaleString('fr-FR') %> FCFA</td>
+                  <td>
+                    <span class="badge <%= s.mode_paiement==='mobile_money' ? 'badge-blue':'badge-gray' %>">
+                      <%= s.mode_paiement==='mobile_money' ? '📱 Mobile':'💵 Espèces' %>
+                    </span>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <span>© <%= new Date().getFullYear() %> SAS Parking Bénin</span>
+      <div class="footer-links"><a href="#">Support</a><a href="#">Confidentialité</a><span>Powered by FedaPay</span></div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+  const barData   = <%- parJourChart %>;
+  const nbMobile  = <%= total.nb_mobile %>;
+  const nbEspeces = <%= total.nb_especes %>;
+  initBarChart('barChart', barData);
+  initDonutChart('donutChart', nbMobile, nbEspeces);
+</script>
+</body>
+</html>

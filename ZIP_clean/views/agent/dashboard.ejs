@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Dashboard Agent — SAS Parking</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+
+<div class="app-layout">
+  <%- include('../composants/sidebar_agent', { page: 'dashboard', agentNom, agentPrenom, agentSite, agentVille }) %>
+
+  <div class="main-content">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Tableau de bord</div>
+        <div class="topbar-sub" id="liveClock"></div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-user">
+          <div class="topbar-avatar"><%= (agentNom||'A')[0].toUpperCase() %></div>
+          <div>
+            <div class="topbar-user-name"><%= agentNom %> <%= agentPrenom %></div>
+            <div class="topbar-user-role">Agent · <%= agentSite %></div>
+          </div>
+          <div class="topbar-online-dot"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <% if (error) { %>
+        <div class="alert alert-error alert-auto-dismiss"><span>⚠️</span><span><%= error %></span></div>
+      <% } %>
+
+      <!-- HERO -->
+      <div class="hero-banner">
+        <div class="hero-title">Bonjour, <%= agentNom %> 👋</div>
+        <div class="hero-subtitle"><%= agentSite %> · <%= agentVille %> — Bonne session de travail !</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <a href="/agent/entree" class="hero-btn">➕ Nouvelle entrée</a>
+          <a href="/agent/sortie" class="hero-btn" style="background:rgba(255,255,255,.15)">🚪 Traiter sortie</a>
+        </div>
+      </div>
+
+      <!-- STATS DU JOUR -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon green">⬇️</div>
+          <div class="stat-value"><%= stats.total_entrees %></div>
+          <div class="stat-label">Entrées du jour</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon blue">⬆️</div>
+          <div class="stat-value"><%= stats.total_sorties %></div>
+          <div class="stat-label">Sorties du jour</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon orange"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M6 17l4-7h4l2-3M14 10l2 7"/></svg></div>
+          <div class="stat-value"><%= stats.en_cours %></div>
+          <div class="stat-label">En garde actuellement</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon purple">💰</div>
+          <div class="stat-value"><%= Number(stats.caisse_actuelle).toLocaleString('fr-FR') %> <span style="font-size:14px;font-weight:500">FCFA</span></div>
+          <div class="stat-label">Caisse du jour</div>
+        </div>
+      </div>
+
+      <!-- VÉLOS EN GARDE + TARIF -->
+      <div class="grid-2" style="align-items:start">
+
+        <!-- Vélos en cours -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M6 17l4-7h4l2-3M14 10l2 7"/></svg> Vélos actuellement en garde</div>
+              <div class="card-sub">Sessions en cours — temps réel</div>
+            </div>
+            <span class="badge badge-green"><%= sessionsEnCours.length %> en cours</span>
+          </div>
+          <div class="card-body" style="padding:0">
+            <% if (sessionsEnCours.length === 0) { %>
+              <div style="padding:36px;text-align:center;color:#9ca3af">
+                <div style="font-size:36px;margin-bottom:8px">🅿️</div>
+                Aucun vélo en garde pour l'instant.
+              </div>
+            <% } else { %>
+              <% sessionsEnCours.slice(0,8).forEach(s => { %>
+                <div style="display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid #f3f4f6">
+                  <div style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:8px;padding:6px 12px;font-family:monospace;font-weight:700;font-size:14px;color:#15803d">
+                    <%= s.plaque %>
+                  </div>
+                  <div style="flex:1">
+                    <div style="font-size:13px;font-weight:600"><%= s.nom_client || 'Client' %> <%= s.prenom_client || '' %></div>
+                    <div style="font-size:11px;color:#6b7280" data-entree="<%= s.heure_entree %>">Calcul en cours...</div>
+                  </div>
+                  <a href="/agent/sortie?plaque=<%= s.plaque %>" class="btn btn-primary btn-sm">Sortie →</a>
+                </div>
+              <% }) %>
+              <% if (sessionsEnCours.length > 8) { %>
+                <div style="padding:12px 20px;text-align:center">
+                  <a href="/agent/sessions?filtre=en_cours" class="btn btn-outline btn-sm">Voir toutes les <%= sessionsEnCours.length %> sessions →</a>
+                </div>
+              <% } %>
+            <% } %>
+          </div>
+        </div>
+
+        <!-- Tarif actif + dernières sessions -->
+        <div style="display:flex;flex-direction:column;gap:20px">
+          <!-- Tarif -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">💰 Tarif en vigueur</div>
+              <% if (currentTarif) { %>
+                <span class="badge badge-green">Actif</span>
+              <% } else { %>
+                <span class="badge badge-orange">Non défini</span>
+              <% } %>
+            </div>
+            <div class="card-body">
+              <% if (currentTarif) { %>
+                <div style="display:flex;align-items:center;gap:16px">
+                  <div style="font-size:32px;font-weight:800;color:#15803d">
+                    <%= Number(currentTarif.prix_tarif).toLocaleString('fr-FR') %> <span style="font-size:16px">FCFA</span>
+                  </div>
+                  <div>
+                    <div class="badge <%= currentTarif.mode_tarifaire === 'heure' ? 'badge-blue' : 'badge-green' %>">
+                      <%= currentTarif.mode_tarifaire === 'heure' ? '⏱ Par heure' : '📦 Garde fixe' %>
+                    </div>
+                  </div>
+                </div>
+              <% } else { %>
+                <div class="alert alert-info" style="margin:0">
+                  <span>ℹ️</span><span>Aucun tarif actif. Contactez l'administrateur.</span>
+                </div>
+              <% } %>
+            </div>
+          </div>
+
+          <!-- Accès rapides -->
+          <div class="card">
+            <div class="card-header"><div class="card-title">⚡ Actions rapides</div></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+              <a href="/agent/entree" class="btn btn-primary btn-full">➕ Enregistrer une entrée</a>
+              <a href="/agent/sortie" class="btn btn-outline btn-full">🚪 Traiter une sortie</a>
+              <a href="/agent/sessions" class="btn btn-outline btn-full">📋 Voir mes sessions</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- DERNIÈRES SESSIONS -->
+      <div class="card mt-24">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Activité récente</div>
+            <div class="card-sub">10 dernières opérations</div>
+          </div>
+          <a href="/agent/sessions" class="btn btn-outline btn-sm">Tout voir →</a>
+        </div>
+        <div class="card-body" style="padding:0">
+          <% if (sessionsRecentes.length === 0) { %>
+            <div style="padding:36px;text-align:center;color:#9ca3af">Aucune session aujourd'hui.</div>
+          <% } else { %>
+            <div style="overflow-x:auto">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Plaque</th>
+                    <th>Code</th>
+                    <th>Entrée</th>
+                    <th>Sortie</th>
+                    <th>Montant</th>
+                    <th>Paiement</th>
+                    <th>Statut</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% sessionsRecentes.forEach(s => { %>
+                    <tr>
+                      <td><strong style="font-family:monospace"><%= s.plaque %></strong></td>
+                      <td><span class="code-hex-display" style="font-size:12px;cursor:pointer"><%= s.code_hex %></span></td>
+                      <td style="font-size:12px;color:#6b7280">
+                        <%= new Date(s.heure_entree).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) %>
+                      </td>
+                      <td style="font-size:12px;color:#6b7280">
+                        <%= s.heure_sortie ? new Date(s.heure_sortie).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '—' %>
+                      </td>
+                      <td style="font-weight:600;color:#15803d">
+                        <%= s.montant ? Number(s.montant).toLocaleString('fr-FR') + ' FCFA' : '—' %>
+                      </td>
+                      <td>
+                        <% if (s.mode_paiement === 'mobile_money') { %>
+                          <span class="badge badge-green" style="font-size:10px">📱 Mobile</span>
+                        <% } else if (s.mode_paiement === 'especes') { %>
+                          <span class="badge" style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;font-size:10px">💵 Espèces</span>
+                        <% } else { %>—<% } %>
+                      </td>
+                      <td>
+                        <% if (s.statut === 'en_cours') { %>
+                          <span class="badge badge-orange" style="font-size:10px">🌀 En cours</span>
+                        <% } else { %>
+                          <span class="badge badge-green" style="font-size:10px">✅ Clôturé</span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <a href="/agent/session/<%= s.id %>" class="btn btn-outline btn-sm">Détail</a>
+                      </td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          <% } %>
+        </div>
+      </div>
+
+    </div><!-- /page-body -->
+
+    <div class="page-footer">
+      <span>© <%= new Date().getFullYear() %> SAS Parking. Tous droits réservés.</span>
+      <div class="footer-links">
+        <a href="#">Support</a>
+        <span style="color:#9ca3af">Powered by FedaPay</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+</body>
+</html>

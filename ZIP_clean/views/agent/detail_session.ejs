@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Détail Session — SAS Parking</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+
+<div class="app-layout">
+  <%- include('../composants/sidebar_agent', { page: 'sessions', agentNom, agentPrenom, agentSite, agentVille }) %>
+
+  <div class="main-content">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Détail de la session</div>
+        <div class="topbar-sub">
+          <a href="/agent/sessions" style="color:#22c55e">← Retour aux sessions</a>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-user">
+          <div class="topbar-avatar"><%= (agentNom||'A')[0].toUpperCase() %></div>
+          <div>
+            <div class="topbar-user-name"><%= agentNom %> <%= agentPrenom %></div>
+            <div class="topbar-user-role">Agent · <%= agentSite %></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <div class="grid-2" style="align-items:start">
+
+        <!-- DÉTAILS COMPLETS -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M6 17l4-7h4l2-3M14 10l2 7"/></svg> Informations de la session</div>
+              <div class="card-sub">ID #<%= session.id %></div>
+            </div>
+            <% if (session.statut === 'en_cours') { %>
+              <span class="badge badge-orange">🌀 En cours</span>
+            <% } else if (session.statut === 'cloture') { %>
+              <span class="badge badge-green">✅ Clôturée</span>
+            <% } else { %>
+              <span class="badge" style="background:#fef2f2;color:#dc2626">Annulée</span>
+            <% } %>
+          </div>
+          <div class="card-body">
+
+            <!-- Plaque + Code -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+              <div style="background:#f0fdf4;border:2px solid #22c55e;border-radius:10px;padding:14px;text-align:center">
+                <div style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:4px">Plaque</div>
+                <div style="font-size:26px;font-family:monospace;font-weight:800;color:#15803d;letter-spacing:2px"><%= session.plaque %></div>
+              </div>
+              <div style="background:#fff7ed;border:2px dashed #f97316;border-radius:10px;padding:14px;text-align:center;cursor:pointer"
+                onclick="navigator.clipboard?.writeText('<%= session.code_hex %>').then(()=>alert('Code copié !'))" title="Copier">
+                <div style="font-size:11px;font-weight:600;color:#9a3412;text-transform:uppercase;margin-bottom:4px">Code garde</div>
+                <div style="font-size:26px;font-family:monospace;font-weight:800;color:#ea580c;letter-spacing:3px"><%= session.code_hex %></div>
+              </div>
+            </div>
+
+            <!-- Informations client -->
+            <div style="margin-bottom:16px">
+              <div style="font-weight:700;font-size:13px;color:#374151;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">👤 Client</div>
+              <% const clientFields = [
+                { label: 'Nom', value: (session.nom_client || '') + ' ' + (session.prenom_client || '') || '—' },
+                { label: 'Téléphone', value: session.telephone_client || '—' },
+                { label: 'N° CIP', value: session.numero_cip || '—' }
+              ] %>
+              <% clientFields.forEach(f => { %>
+                <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:13px">
+                  <span style="color:#6b7280"><%= f.label %></span>
+                  <span style="font-weight:500"><%= f.value %></span>
+                </div>
+              <% }) %>
+            </div>
+
+            <!-- Horodatage -->
+            <div style="margin-bottom:16px">
+              <div style="font-weight:700;font-size:13px;color:#374151;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">⏱ Horodatage</div>
+              <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:13px">
+                <span style="color:#6b7280">Entrée</span>
+                <span><%= new Date(session.heure_entree).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) %></span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:13px">
+                <span style="color:#6b7280">Sortie</span>
+                <% if (session.heure_sortie) { %>
+                  <span><%= new Date(session.heure_sortie).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) %></span>
+                <% } else { %>
+                  <span style="color:#22c55e;font-weight:600" data-entree="<%= session.heure_entree %>">En cours...</span>
+                <% } %>
+              </div>
+              <% if (session.heure_sortie) {
+                const h = Math.floor((new Date(session.heure_sortie) - new Date(session.heure_entree)) / 3600000);
+                const m = Math.floor(((new Date(session.heure_sortie) - new Date(session.heure_entree)) % 3600000) / 60000);
+              %>
+                <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:13px">
+                  <span style="color:#6b7280">Durée totale</span>
+                  <span style="font-weight:600;color:#15803d"><%= h > 0 ? h + 'h ' : '' %><%= m %>min</span>
+                </div>
+              <% } %>
+            </div>
+
+            <!-- Paiement -->
+            <div>
+              <div style="font-weight:700;font-size:13px;color:#374151;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">💰 Paiement</div>
+              <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:13px">
+                <span style="color:#6b7280">Mode</span>
+                <span>
+                  <% if (session.mode_paiement === 'mobile_money') { %>
+                    <span class="badge badge-green">📱 Mobile Money</span>
+                  <% } else if (session.mode_paiement === 'especes') { %>
+                    <span class="badge" style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0">💵 Espèces</span>
+                  <% } else { %>—<% } %>
+                </span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:15px;align-items:center">
+                <span style="color:#6b7280;font-weight:600">Montant</span>
+                <span style="font-size:24px;font-weight:800;color:#15803d">
+                  <%= session.montant ? Number(session.montant).toLocaleString('fr-FR') + ' FCFA' : '—' %>
+                </span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ACTIONS + NOTIFICATIONS -->
+        <div style="display:flex;flex-direction:column;gap:16px">
+
+          <!-- Actions -->
+          <div class="card">
+            <div class="card-header"><div class="card-title">⚡ Actions</div></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+              <% if (session.statut === 'en_cours') { %>
+                <a href="/agent/sortie?plaque=<%= session.plaque %>" class="btn btn-primary btn-full" style="height:48px">
+                  🚪 Traiter la sortie
+                </a>
+                <form action="/agent/session/annuler/<%= session.id %>" method="POST">
+                  <button type="submit" class="btn btn-outline btn-full" style="height:44px;color:#dc2626;border-color:#fca5a5"
+                    data-confirm="Annuler cette session ? Cette action est irréversible.">
+                    ✕ Annuler la session
+                  </button>
+                </form>
+              <% } %>
+              <% if (session.pdf_recu) { %>
+                <a href="/agent/recu/<%= session.id %>" target="_blank" class="btn btn-outline btn-full" style="height:44px">
+                  ⬇️ Télécharger le reçu PDF
+                </a>
+              <% } %>
+              <a href="/agent/sessions" class="btn btn-outline btn-full" style="height:44px">
+                ← Retour aux sessions
+              </a>
+            </div>
+          </div>
+
+          <!-- Site + Agent -->
+          <div class="card">
+            <div class="card-header"><div class="card-title"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> Informations du site</div></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+              <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f3f4f6">
+                <span style="color:#6b7280">Site</span>
+                <span style="font-weight:600"><%= session.nom_parking %></span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f3f4f6">
+                <span style="color:#6b7280">Ville</span>
+                <span><%= session.ville %></span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:6px 0">
+                <span style="color:#6b7280">Agent</span>
+                <span><%= session.agent_nom %></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notifications -->
+          <% if (notifs && notifs.length > 0) { %>
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">📲 Notifications SMS</div>
+                <span class="badge badge-green"><%= notifs.length %></span>
+              </div>
+              <div class="card-body" style="padding:0">
+                <% notifs.forEach(n => { %>
+                  <div style="padding:12px 16px;border-bottom:1px solid #f3f4f6;font-size:12px">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                      <span class="badge <%= n.statut === 'envoye' ? 'badge-green' : 'badge-orange' %>" style="font-size:10px">
+                        <%= n.type === 'entree' ? '⬇️ Entrée' : '⬆️ Sortie' %>
+                      </span>
+                      <span style="color:#9ca3af"><%= new Date(n.sent_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) %></span>
+                    </div>
+                    <div style="color:#6b7280"><%= n.message || '—' %></div>
+                  </div>
+                <% }) %>
+              </div>
+            </div>
+          <% } %>
+        </div>
+
+      </div>
+
+    </div><!-- /page-body -->
+
+    <div class="page-footer">
+      <span>© <%= new Date().getFullYear() %> SAS Parking. Tous droits réservés.</span>
+      <div class="footer-links">
+        <a href="#">Support</a>
+        <span style="color:#9ca3af">Powered by FedaPay</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Nouvelle Entrée — SAS Parking</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+
+<div class="app-layout">
+  <%- include('../composants/sidebar_agent', { page: 'entree', agentNom, agentPrenom, agentSite, agentVille }) %>
+
+  <div class="main-content">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Nouvelle Entrée</div>
+        <div class="topbar-sub">Enregistrez l'arrivée d'un véhicule</div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-user">
+          <div class="topbar-avatar"><%= (agentNom||'A')[0].toUpperCase() %></div>
+          <div>
+            <div class="topbar-user-name"><%= agentNom %> <%= agentPrenom %></div>
+            <div class="topbar-user-role">Agent · <%= agentSite %></div>
+          </div>
+          <div class="topbar-online-dot"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- Alertes -->
+      <% if (error) { %>
+        <div class="alert alert-error alert-auto-dismiss"><span>⚠️</span><span><%= error %></span></div>
+      <% } %>
+      <% if (success) { %>
+        <div class="alert alert-success alert-auto-dismiss">
+          <span>✅</span>
+          <span>Entrée enregistrée ! Plaque : <strong><%= req.query.plaque %></strong> — Code : <strong><%= req.query.code %></strong></span>
+        </div>
+      <% } %>
+
+      <!-- Jauges capacité -->
+      <div class="stats-grid" style="grid-template-columns:repeat(2,1fr);margin-bottom:20px">
+        <div class="stat-card">
+          <div class="stat-icon green">🅿️</div>
+          <div class="stat-value"><%= capacite - occupation %></div>
+          <div class="stat-label">Places disponibles</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon orange"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M6 17l4-7h4l2-3M14 10l2 7"/></svg></div>
+          <div class="stat-value"><%= occupation %> / <%= capacite %></div>
+          <div class="stat-label">Occupation actuelle</div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="align-items:start">
+
+        <!-- FORMULAIRE -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Informations du véhicule</div>
+              <div class="card-sub">Saisissez la plaque et les infos client</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <form action="/agent/entree" method="POST" id="entreeForm">
+
+              <!-- Champ plaque mis en avant -->
+              <div class="form-group">
+                <label class="form-label" style="font-size:15px;font-weight:700">
+                  🚘 Numéro de plaque <span style="color:#ef4444">*</span>
+                </label>
+                <input type="text" id="plaqueInput" name="plaque" class="form-control"
+                  style="font-size:24px;font-family:monospace;font-weight:700;letter-spacing:2px;text-align:center;text-transform:uppercase;height:56px"
+                  value="<%= formData.plaque || '' %>" placeholder="ABC 123 D"
+                  autocomplete="off" autocapitalize="characters" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Nom du client</label>
+                <input type="text" name="nom" class="form-control"
+                  value="<%= formData.nom || '' %>" placeholder="Nom de famille">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Prénom du client</label>
+                <input type="text" name="prenom" class="form-control"
+                  value="<%= formData.prenom || '' %>" placeholder="Prénom">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Téléphone (pour notification SMS)</label>
+                <input type="tel" name="telephone" class="form-control"
+                  value="<%= formData.telephone || '' %>" placeholder="+229 XX XX XX XX">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Numéro CIP (facultatif)</label>
+                <input type="text" name="numero_cip" class="form-control"
+                  value="<%= formData.numero_cip || '' %>" placeholder="Numéro de pièce d'identité">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Mode de paiement prévu</label>
+                <div style="display:flex;gap:12px;margin-top:6px">
+                  <div class="payment-option <%= (!formData.mode || formData.mode === 'especes') ? 'selected' : '' %>"
+                    data-mode="especes" onclick="selectPayment('especes')" style="flex:1">
+                    <div style="font-size:24px">💵</div>
+                    <div style="font-weight:600;font-size:14px">Espèces</div>
+                  </div>
+                  <div class="payment-option <%= formData.mode === 'mobile' ? 'selected' : '' %>"
+                    data-mode="mobile" onclick="selectPayment('mobile')" style="flex:1">
+                    <div style="font-size:24px">📱</div>
+                    <div style="font-weight:600;font-size:14px">Mobile Money</div>
+                  </div>
+                </div>
+                <input type="hidden" name="mode" id="modeInput" value="<%= formData.mode || 'especes' %>">
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-full" style="height:52px;font-size:16px;font-weight:700">
+                ✅ Enregistrer l'entrée
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- CLAVIER NUMÉRIQUE -->
+        <div style="display:flex;flex-direction:column;gap:20px">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">⌨️ Clavier tactile</div>
+              <div class="card-sub">Saisie rapide de la plaque</div>
+            </div>
+            <div class="card-body">
+              <div class="keypad">
+                <% ['1','2','3','4','5','6','7','8','9','0',
+                   'A','B','C','D','E','F','G','H','I','J',
+                   'K','L','M','N','O','P','Q','R','S','T',
+                   'U','V','W','X','Y','Z'].forEach(k => { %>
+                  <button type="button" class="key-btn" data-key="<%= k %>"><%= k %></button>
+                <% }) %>
+                <button type="button" class="key-btn key-btn-space" data-key=" " style="grid-column:span 3"> Espace </button>
+                <button type="button" class="key-btn key-btn-del" data-key="DEL" style="grid-column:span 3;background:#fef2f2;color:#dc2626;border-color:#fca5a5">⌫ Suppr</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dernières entrées -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">🕐 Dernières entrées</div>
+            </div>
+            <div class="card-body" style="padding:0">
+              <% if (!dernieres || dernieres.length === 0) { %>
+                <div style="padding:20px;text-align:center;color:#9ca3af;font-size:13px">Aucune entrée récente.</div>
+              <% } else { %>
+                <% dernieres.forEach(d => { %>
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid #f3f4f6">
+                    <div>
+                      <span style="font-family:monospace;font-weight:700;font-size:14px"><%= d.plaque %></span>
+                      <span style="color:#6b7280;font-size:11px;margin-left:8px"><%= new Date(d.heure_entree).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) %></span>
+                    </div>
+                    <span class="code-hex-display" style="font-size:11px;cursor:pointer;background:#f0fdf4;padding:2px 8px;border-radius:4px;color:#15803d;font-family:monospace">
+                      <%= d.code_hex %>
+                    </span>
+                  </div>
+                <% }) %>
+              <% } %>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div><!-- /page-body -->
+
+    <div class="page-footer">
+      <span>© <%= new Date().getFullYear() %> SAS Parking. Tous droits réservés.</span>
+      <div class="footer-links">
+        <a href="#">Support</a>
+        <span style="color:#9ca3af">Powered by FedaPay</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+</body>
+</html>

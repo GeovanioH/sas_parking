@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Tableau de bord — SAS Parking Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+
+<div class="app-layout">
+  <%- include('../composants/sidebar_admin', { page: 'dashboard', adminNom, adminPrenom }) %>
+
+  <div class="main-content">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Tableau de bord</div>
+        <div class="topbar-sub"><%= new Date().toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' }) %></div>
+      </div>
+      <div class="topbar-right">
+        <a href="/historique" class="btn-notif" data-tooltip="Notifications">
+          🔔
+        </a>
+        <div class="topbar-user">
+          <div class="topbar-avatar"><%= (adminNom||'A')[0].toUpperCase() %></div>
+          <div>
+            <div class="topbar-user-name"><%= adminNom %> <%= adminPrenom %></div>
+            <div class="topbar-user-role">Administrateur Principal</div>
+          </div>
+          <div class="topbar-online-dot"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <% if (error) { %>
+        <div class="alert alert-error alert-auto-dismiss"><span>⚠️</span><span><%= error %></span></div>
+      <% } %>
+      <% if (success) { %>
+        <div class="alert alert-success alert-auto-dismiss"><span>✅</span><span><%= success %></span></div>
+      <% } %>
+
+      <!-- HERO -->
+      <div class="hero-banner">
+        <div class="hero-title">Bonjour, <%= adminNom %> — <%= adminSite %></div>
+        <div class="hero-subtitle">Vos opérations se déroulent normalement. Gérez votre parking en temps réel.</div>
+        <a href="/rapports" class="hero-btn">Voir les rapports →</a>
+      </div>
+
+      <!-- STATS -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon green">💰</div>
+          <div class="stat-value"><%= Number(stats.recettes_jour).toLocaleString('fr-FR') %> FCFA</div>
+          <div class="stat-label">Recettes du jour</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon blue"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M6 17l4-7h4l2-3M14 10l2 7"/></svg></div>
+          <div class="stat-value"><%= stats.velos_en_garde %></div>
+          <div class="stat-label">Vélos actuellement en garde</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon orange">👥</div>
+          <div class="stat-value"><%= agents.length %></div>
+          <div class="stat-label">Agents actifs</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon purple">✅</div>
+          <div class="stat-value"><%= stats.sessions_cloturees %></div>
+          <div class="stat-label">Sessions clôturées</div>
+        </div>
+      </div>
+
+      <!-- GRAPHIQUE + AGENTS -->
+      <div class="grid-2" style="align-items:start">
+
+        <!-- Recettes par heure -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Recettes par heure</div>
+              <div class="card-sub">Flux de revenus de la journée</div>
+            </div>
+          </div>
+          <div class="card-body" style="padding-bottom:16px">
+            <div style="height:220px;position:relative">
+              <canvas id="revenueChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Agents en poste -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Agents en poste</div>
+              <div class="card-sub">Surveillance en temps réel</div>
+            </div>
+            <% const nbActifs = agents.filter(a => a.nb_sessions > 0).length %>
+            <span class="badge badge-green"><%= nbActifs %> actifs</span>
+          </div>
+          <div class="card-body" style="padding:0">
+            <% if (agents.length === 0) { %>
+              <div style="padding:24px;text-align:center;color:#9ca3af">
+                Aucun agent configuré. <a href="/agents" style="color:#15803d">Ajouter un agent</a>
+              </div>
+            <% } else { %>
+              <% agents.slice(0,6).forEach(a => { %>
+                <div style="display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid #f3f4f6">
+                  <div class="sidebar-avatar" style="width:38px;height:38px;font-size:13px">
+                    <%= (a.nom||'A')[0].toUpperCase() %>
+                  </div>
+                  <div style="flex:1">
+                    <div style="font-weight:600;font-size:14px"><%= a.nom %> <%= a.prenom %></div>
+                    <div style="font-size:12px;color:#6b7280"><%= a.nb_sessions %> sessions · <%= Number(a.total_encaisse||0).toLocaleString('fr-FR') %> FCFA</div>
+                  </div>
+                  <div class="agent-status">
+                    <span class="status-dot <%= a.en_cours > 0 ? 'online' : 'offline' %>"></span>
+                    <span style="font-size:11px;color:<%= a.en_cours > 0 ? '#15803d' : '#9ca3af' %>">
+                      <%= a.en_cours > 0 ? 'EN LIGNE' : 'HORS LIGNE' %>
+                    </span>
+                  </div>
+                </div>
+              <% }) %>
+            <% } %>
+            <div style="padding:12px 20px">
+              <a href="/agents" class="btn btn-outline btn-sm btn-full">Gérer toute l'équipe →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TARIF ACTIF + PARAMÈTRE RAPIDE -->
+      <div class="card mt-24">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Tarification active</div>
+            <div class="card-sub">Modifiez le tarif appliqué à toutes les sessions</div>
+          </div>
+          <% if (currentTarif) { %>
+            <span class="badge badge-green">En service</span>
+          <% } else { %>
+            <span class="badge badge-orange">Aucun tarif</span>
+          <% } %>
+        </div>
+        <div class="card-body">
+          <form action="/dashboard" method="POST" style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end">
+            <div class="form-group" style="margin:0;flex:1;min-width:160px">
+              <label class="form-label">Mode</label>
+              <select name="mode" class="form-control">
+                <option value="garde"  <%= currentTarif && currentTarif.mode_tarifaire === 'garde'  ? 'selected' : '' %>>Prix fixe (garde)</option>
+                <option value="heure"  <%= currentTarif && currentTarif.mode_tarifaire === 'heure'  ? 'selected' : '' %>>Par heure</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin:0;flex:1;min-width:160px">
+              <label class="form-label">Tarif (FCFA)</label>
+              <input type="number" name="prix" class="form-control" min="50" step="50"
+                value="<%= currentTarif ? currentTarif.prix_tarif : 200 %>" required>
+            </div>
+            <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
+          </form>
+          <% if (currentTarif) { %>
+            <div class="alert alert-info mt-16" style="font-size:12px">
+              <span>ℹ️</span>
+              <span>Tarif actuel : <strong><%= currentTarif.prix_tarif %> FCFA</strong>
+              (<%= currentTarif.mode_tarifaire === 'heure' ? 'par heure' : 'garde fixe' %>)
+              — en vigueur depuis <%= new Date(currentTarif.created_at).toLocaleDateString('fr-FR') %></span>
+            </div>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Rapports de fin de journée -->
+      <div class="card mt-24" style="background:linear-gradient(135deg,#15803d,#22c55e);border:none;color:white">
+        <div class="card-body" style="padding:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
+          <div>
+            <div style="font-size:16px;font-weight:700;margin-bottom:4px">⏱ Rapports de fin de journée</div>
+            <div style="font-size:13px;opacity:.85">Prêt à clôturer la session globale du réseau ?</div>
+          </div>
+          <a href="/rapports" class="btn" style="background:rgba(255,255,255,.2);color:white;border:1.5px solid rgba(255,255,255,.4)">
+            Générer maintenant
+          </a>
+        </div>
+      </div>
+
+    </div><!-- /page-body -->
+
+    <div class="page-footer">
+      <span>© <%= new Date().getFullYear() %> SAS Parking. Tous droits réservés.</span>
+      <div class="footer-links">
+        <a href="#">Support</a>
+        <a href="#">Confidentialité</a>
+        <span style="color:#9ca3af">Powered by FedaPay</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+  const chartData = <%- recettesChart %>;
+  initRevenueChart('revenueChart', chartData);
+</script>
+</body>
+</html>

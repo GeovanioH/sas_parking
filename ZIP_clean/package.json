@@ -1,0 +1,36 @@
+{
+  "name": "sas-parking",
+  "version": "2.0.0",
+  "description": "SAS Parking — Système de gestion de parking avec notifications et reçus PDF",
+  "keywords": [
+    "parking",
+    "gestion",
+    "sas",
+    "benin"
+  ],
+  "license": "ISC",
+  "author": "DENAKPO Huriel",
+  "type": "commonjs",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "dependencies": {
+    "africastalking": "^0.7.9",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^16.0.0",
+    "ejs": "^3.1.10",
+    "express": "^4.22.2",
+    "express-rate-limit": "^7.0.0",
+    "express-session": "^1.19.0",
+    "fedapay": "^1.2.5",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.9.0",
+    "pdfkit": "^0.15.0",
+    "pg": "^8.21.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+}

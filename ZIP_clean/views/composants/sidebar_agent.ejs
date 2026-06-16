@@ -1,0 +1,49 @@
+<%# composants/sidebar_agent.ejs — Barre latérale Agent %>
+<aside class="sidebar" id="sidebar">
+  <a href="/agent/dashboard" class="sidebar-brand">
+    <div class="sidebar-logo-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M6 17l4-7h4l2-3M14 10l2 7"/></svg></div>
+    <div class="sidebar-brand-text">
+      <div class="sidebar-brand-name">SAS Parking</div>
+      <div class="sidebar-brand-sub">"La garde, simplifiée."</div>
+    </div>
+  </a>
+  <button class="sidebar-toggle-btn" onclick="toggleSidebar()">◀</button>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-title">Navigation</div>
+
+    <a href="/agent/dashboard" class="nav-link <%= page === 'dashboard' ? 'active' : '' %>">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Accueil
+    </a>
+
+    <a href="/agent/entree" class="nav-link <%= page === 'entree' ? 'active' : '' %>">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nouvelle Entrée
+    </a>
+
+    <a href="/agent/sortie" class="nav-link <%= page === 'sortie' ? 'active' : '' %>">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Traiter Sortie
+    </a>
+
+    <a href="/agent/sessions" class="nav-link <%= page === 'sessions' ? 'active' : '' %>">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Mes Sessions
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="sidebar-avatar"><%= (agentNom || 'A')[0].toUpperCase() %></div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name"><%= agentNom %> <%= agentPrenom %></div>
+        <div class="sidebar-user-role">Agent · <%= agentSite %></div>
+      </div>
+    </div>
+    <a href="/agent/logout" class="sidebar-logout">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Déconnexion
+    </a>
+  </div>
+</aside>

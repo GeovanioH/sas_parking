@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Mes Sessions — SAS Parking</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+
+<div class="app-layout">
+  <%- include('../composants/sidebar_agent', { page: 'sessions', agentNom, agentPrenom, agentSite, agentVille }) %>
+
+  <div class="main-content">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Mes Sessions</div>
+        <div class="topbar-sub"><%= sessions.length %> résultat(s)</div>
+      </div>
+      <div class="topbar-right">
+        <a href="/agent/entree" class="btn btn-primary btn-sm">➕ Nouvelle entrée</a>
+        <div class="topbar-user">
+          <div class="topbar-avatar"><%= (agentNom||'A')[0].toUpperCase() %></div>
+          <div>
+            <div class="topbar-user-name"><%= agentNom %> <%= agentPrenom %></div>
+            <div class="topbar-user-role">Agent · <%= agentSite %></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <% if (error) { %>
+        <div class="alert alert-error alert-auto-dismiss"><span>⚠️</span><span><%= error %></span></div>
+      <% } %>
+
+      <!-- TOTAUX DU JOUR -->
+      <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">
+        <div class="stat-card">
+          <div class="stat-icon green">📋</div>
+          <div class="stat-value"><%= totaux.nb %></div>
+          <div class="stat-label">Sessions aujourd'hui</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon blue">💰</div>
+          <div class="stat-value"><%= Number(totaux.total).toLocaleString('fr-FR') %> <span style="font-size:12px">FCFA</span></div>
+          <div class="stat-label">Total encaissé</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon orange">📱</div>
+          <div class="stat-value"><%= totaux.nb_mobile %></div>
+          <div class="stat-label">Mobile Money</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon purple">💵</div>
+          <div class="stat-value"><%= totaux.nb_especes %></div>
+          <div class="stat-label">Espèces</div>
+        </div>
+      </div>
+
+      <!-- FILTRES -->
+      <div class="card">
+        <div class="card-body">
+          <form action="/agent/sessions" method="GET" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">
+            <div class="form-group" style="margin:0;flex:2;min-width:180px">
+              <label class="form-label">Recherche</label>
+              <input type="text" name="search" class="form-control" value="<%= search %>" placeholder="🔍 Plaque, code ou nom client">
+            </div>
+            <div class="form-group" style="margin:0;flex:1;min-width:140px">
+              <label class="form-label">Filtrer par</label>
+              <select name="filtre" class="form-control">
+                <option value="toutes"   <%= filtre === 'toutes'   ? 'selected' : '' %>>Toutes</option>
+                <option value="en_cours" <%= filtre === 'en_cours' ? 'selected' : '' %>>En cours</option>
+                <option value="termine"  <%= filtre === 'termine'  ? 'selected' : '' %>>Terminées</option>
+                <option value="mobile"   <%= filtre === 'mobile'   ? 'selected' : '' %>>Mobile Money</option>
+                <option value="especes"  <%= filtre === 'especes'  ? 'selected' : '' %>>Espèces</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin:0;flex:1;min-width:130px">
+              <label class="form-label">Date</label>
+              <input type="date" name="date" class="form-control" value="<%= date %>">
+            </div>
+            <div style="display:flex;gap:8px">
+              <button type="submit" class="btn btn-primary">🔍</button>
+              <a href="/agent/sessions" class="btn btn-outline">✕</a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="card mt-24">
+        <div class="card-header">
+          <div class="card-title">Liste des sessions</div>
+          <span class="badge badge-green"><%= sessions.length %> trouvée(s)</span>
+        </div>
+        <div class="card-body" style="padding:0">
+          <% if (sessions.length === 0) { %>
+            <div style="padding:48px;text-align:center;color:#9ca3af">
+              <div style="font-size:40px;margin-bottom:8px">📭</div>
+              <div style="font-weight:600;margin-bottom:4px">Aucune session trouvée</div>
+              <div style="font-size:13px">Essayez de modifier les filtres.</div>
+              <a href="/agent/entree" class="btn btn-primary" style="margin-top:16px">➕ Nouvelle entrée</a>
+            </div>
+          <% } else { %>
+            <div style="overflow-x:auto">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Plaque</th>
+                    <th>Code</th>
+                    <th>Client</th>
+                    <th>Entrée</th>
+                    <th>Sortie / Durée</th>
+                    <th>Montant</th>
+                    <th>Paiement</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% sessions.forEach(s => {
+                    const entree = new Date(s.heure_entree);
+                    const sortie = s.heure_sortie ? new Date(s.heure_sortie) : null;
+                    let dureeStr = '—';
+                    if (sortie) {
+                      const h = Math.floor((sortie-entree)/3600000);
+                      const m = Math.floor(((sortie-entree)%3600000)/60000);
+                      dureeStr = h > 0 ? `${h}h${m}m` : `${m}m`;
+                    }
+                  %>
+                    <tr>
+                      <td><strong style="font-family:monospace;letter-spacing:.5px"><%= s.plaque %></strong></td>
+                      <td>
+                        <span class="code-hex-display" style="font-size:12px;cursor:pointer;background:#f0fdf4;padding:2px 8px;border-radius:4px;color:#15803d;font-family:monospace">
+                          <%= s.code_hex %>
+                        </span>
+                      </td>
+                      <td style="font-size:13px"><%= s.nom_complet || '—' %></td>
+                      <td style="font-size:12px;color:#6b7280">
+                        <%= entree.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) %>
+                        <div style="font-size:11px"><%= entree.toLocaleDateString('fr-FR') %></div>
+                      </td>
+                      <td style="font-size:12px;color:#6b7280">
+                        <% if (sortie) { %>
+                          <%= sortie.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) %>
+                          <div style="font-size:11px;color:#15803d;font-weight:600"><%= dureeStr %></div>
+                        <% } else { %>
+                          <span style="color:#22c55e;font-weight:600;font-size:12px" data-entree="<%= s.heure_entree %>">En cours...</span>
+                        <% } %>
+                      </td>
+                      <td style="font-weight:600;color:#15803d">
+                        <%= s.montant ? Number(s.montant).toLocaleString('fr-FR') + ' FCFA' : '—' %>
+                      </td>
+                      <td>
+                        <% if (s.mode_paiement === 'mobile_money') { %>
+                          <span class="badge badge-green" style="font-size:10px">📱 Mobile</span>
+                        <% } else if (s.mode_paiement === 'especes') { %>
+                          <span class="badge" style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;font-size:10px">💵 Cash</span>
+                        <% } else { %>—<% } %>
+                      </td>
+                      <td>
+                        <% if (s.statut === 'en_cours') { %>
+                          <span class="badge badge-orange" style="font-size:10px">🌀 En cours</span>
+                        <% } else if (s.statut === 'cloture') { %>
+                          <span class="badge badge-green" style="font-size:10px">✅ Clôturé</span>
+                        <% } else { %>
+                          <span class="badge" style="background:#fef2f2;color:#dc2626;font-size:10px">Annulé</span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <div style="display:flex;gap:6px">
+                          <a href="/agent/session/<%= s.id %>" class="btn btn-outline btn-sm" style="font-size:11px">Détail</a>
+                          <% if (s.statut === 'en_cours') { %>
+                            <a href="/agent/sortie?plaque=<%= s.plaque %>" class="btn btn-primary btn-sm" style="font-size:11px">Sortie</a>
+                          <% } %>
+                        </div>
+                      </td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          <% } %>
+        </div>
+      </div>
+
+    </div><!-- /page-body -->
+
+    <div class="page-footer">
+      <span>© <%= new Date().getFullYear() %> SAS Parking. Tous droits réservés.</span>
+      <div class="footer-links">
+        <a href="#">Support</a>
+        <span style="color:#9ca3af">Powered by FedaPay</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+</body>
+</html>

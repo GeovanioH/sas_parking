@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Sortie Confirmée — SAS Parking</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+
+<div class="app-layout">
+  <%- include('../composants/sidebar_agent', { page: 'sortie', agentNom, agentPrenom, agentSite, agentVille }) %>
+
+  <div class="main-content">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Sortie Confirmée</div>
+        <div class="topbar-sub">Session clôturée avec succès</div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-user">
+          <div class="topbar-avatar"><%= (agentNom||'A')[0].toUpperCase() %></div>
+          <div>
+            <div class="topbar-user-name"><%= agentNom %> <%= agentPrenom %></div>
+            <div class="topbar-user-role">Agent · <%= agentSite %></div>
+          </div>
+          <div class="topbar-online-dot"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- SUCCESS BANNER -->
+      <div style="background:linear-gradient(135deg,#15803d,#22c55e);border-radius:16px;padding:32px;text-align:center;color:white;margin-bottom:24px">
+        <div style="font-size:56px;margin-bottom:8px">🎉</div>
+        <div style="font-size:22px;font-weight:800;margin-bottom:4px">Sortie enregistrée !</div>
+        <div style="font-size:14px;opacity:.85">La session de garde a été clôturée avec succès.</div>
+      </div>
+
+      <div class="grid-2" style="align-items:start">
+
+        <!-- REÇU PRINCIPAL -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">🧾 Détails de la session</div>
+              <div class="card-sub">Récapitulatif complet</div>
+            </div>
+            <span class="badge badge-green">✅ Clôturée</span>
+          </div>
+          <div class="card-body">
+            <!-- Plaque -->
+            <div style="background:#f0fdf4;border:2px solid #22c55e;border-radius:12px;padding:16px;text-align:center;margin-bottom:20px">
+              <div style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Plaque</div>
+              <div style="font-size:36px;font-family:monospace;font-weight:800;color:#15803d;letter-spacing:3px">
+                <%= session.plaque %>
+              </div>
+            </div>
+
+            <!-- Code HEX en grand -->
+            <div style="background:#fff7ed;border:2px dashed #f97316;border-radius:12px;padding:16px;text-align:center;margin-bottom:20px;cursor:pointer"
+              onclick="copyCode(this)" title="Cliquer pour copier">
+              <div style="font-size:11px;font-weight:600;color:#9a3412;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Code de garde</div>
+              <div id="codeHexDisplay" style="font-size:40px;font-family:monospace;font-weight:800;color:#ea580c;letter-spacing:6px">
+                <%= session.code_hex %>
+              </div>
+              <div style="font-size:11px;color:#9a3412;margin-top:6px;opacity:.7">📋 Cliquez pour copier</div>
+            </div>
+
+            <!-- Détails ligne par ligne -->
+            <div style="display:flex;flex-direction:column;gap:0">
+              <% const fields = [
+                { label: 'Client', value: (session.nom_client || '') + ' ' + (session.prenom_client || '') || '—' },
+                { label: 'Téléphone', value: session.telephone_client || '—' },
+                { label: 'Entrée', value: new Date(session.heure_entree).toLocaleString('fr-FR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) },
+                { label: 'Sortie', value: session.heure_sortie ? new Date(session.heure_sortie).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—' },
+                { label: 'Site', value: session.nom_parking + ' · ' + session.ville }
+              ] %>
+              <% fields.forEach(f => { %>
+                <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f3f4f6;font-size:13px">
+                  <span style="color:#6b7280"><%= f.label %></span>
+                  <span style="font-weight:500"><%= f.value %></span>
+                </div>
+              <% }) %>
+              <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f3f4f6;font-size:13px">
+                <span style="color:#6b7280">Mode paiement</span>
+                <span>
+                  <% if (mode === 'mobile_money') { %>
+                    <span class="badge badge-green">📱 Mobile Money</span>
+                  <% } else { %>
+                    <span class="badge" style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0">💵 Espèces</span>
+                  <% } %>
+                </span>
+              </div>
+            </div>
+
+            <!-- Montant total -->
+            <div style="background:#f0fdf4;border-radius:10px;padding:16px;text-align:center;margin-top:16px">
+              <div style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Montant encaissé</div>
+              <div style="font-size:36px;font-weight:800;color:#15803d">
+                <%= Number(montant).toLocaleString('fr-FR') %> <span style="font-size:18px">FCFA</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACTIONS -->
+        <div style="display:flex;flex-direction:column;gap:16px">
+
+          <!-- PDF -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📄 Reçu PDF</div>
+            </div>
+            <div class="card-body">
+              <% if (hasPdf) { %>
+                <div class="alert alert-info" style="margin-bottom:16px">
+                  <span>ℹ️</span><span>Le reçu PDF a été généré automatiquement.</span>
+                </div>
+                <a href="/agent/recu/<%= session.id %>" target="_blank"
+                  class="btn btn-primary btn-full" style="height:52px;font-size:15px;font-weight:700">
+                  ⬇️ Télécharger le reçu PDF
+                </a>
+              <% } else { %>
+                <div class="alert" style="background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;margin-bottom:16px">
+                  <span>⚠️</span><span>Le reçu PDF n'est pas disponible pour cette session.</span>
+                </div>
+                <button class="btn btn-outline btn-full" disabled style="opacity:.5;cursor:not-allowed;height:52px">
+                  Reçu indisponible
+                </button>
+              <% } %>
+            </div>
+          </div>
+
+          <!-- Actions suivantes -->
+          <div class="card">
+            <div class="card-header"><div class="card-title">⚡ Suite des opérations</div></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+              <a href="/agent/entree" class="btn btn-primary btn-full" style="height:48px">
+                ➕ Nouvelle entrée
+              </a>
+              <a href="/agent/sortie" class="btn btn-outline btn-full" style="height:48px">
+                🚪 Autre sortie
+              </a>
+              <a href="/agent/sessions" class="btn btn-outline btn-full" style="height:48px">
+                📋 Voir mes sessions
+              </a>
+              <a href="/agent/dashboard" class="btn btn-outline btn-full" style="height:48px">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Retour au dashboard
+              </a>
+            </div>
+          </div>
+
+          <!-- SMS -->
+          <% if (session.telephone_client) { %>
+            <div class="card" style="border:1.5px solid #bbf7d0">
+              <div class="card-body" style="padding:16px;display:flex;align-items:center;gap:12px">
+                <div style="font-size:28px">📲</div>
+                <div>
+                  <div style="font-weight:600;font-size:14px;color:#15803d">Notification SMS envoyée</div>
+                  <div style="font-size:12px;color:#6b7280"><%= session.telephone_client %></div>
+                </div>
+              </div>
+            </div>
+          <% } %>
+        </div>
+
+      </div>
+
+    </div><!-- /page-body -->
+
+    <div class="page-footer">
+      <span>© <%= new Date().getFullYear() %> SAS Parking. Tous droits réservés.</span>
+      <div class="footer-links">
+        <a href="#">Support</a>
+        <span style="color:#9ca3af">Powered by FedaPay</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+  function copyCode(el) {
+    const code = document.getElementById('codeHexDisplay').textContent.trim();
+    navigator.clipboard?.writeText(code).then(() => {
+      const orig = el.querySelector('#codeHexDisplay').textContent;
+      el.querySelector('#codeHexDisplay').textContent = '✓ Copié !';
+      setTimeout(() => { el.querySelector('#codeHexDisplay').textContent = orig; }, 1500);
+    });
+  }
+</script>
+</body>
+</html>

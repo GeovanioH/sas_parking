@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Page introuvable — SAS Parking</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body style="background:#f9fafb;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0">
+
+  <div style="text-align:center;max-width:480px;padding:40px 24px">
+    <!-- Logo -->
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:32px">
+      <div style="width:44px;height:44px;background:linear-gradient(135deg,#15803d,#22c55e);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M6 17l4-7h4l2-3M14 10l2 7"/></svg></div>
+      <div style="font-size:18px;font-weight:800;color:#111827">SAS Parking</div>
+    </div>
+
+    <!-- Illustration -->
+    <div style="font-size:88px;margin-bottom:16px;line-height:1">🔍</div>
+
+    <!-- Code 404 -->
+   <div style="font-size:80px;font-weight:800;color:#22c55e;line-height:1;margin-bottom:8px">
+  404
+</div>
+
+    <div style="font-size:20px;font-weight:700;color:#111827;margin-bottom:8px">
+      Page introuvable
+    </div>
+
+    <div style="font-size:14px;color:#6b7280;line-height:1.6;margin-bottom:32px">
+      La page que vous recherchez n'existe pas ou a été déplacée.<br>
+      Vérifiez l'URL ou revenez à l'accueil.
+    </div>
+
+    <!-- Actions -->
+    <div style="display:flex;flex-direction:column;gap:10px;align-items:center">
+      <a href="javascript:history.back()" class="btn btn-primary" style="min-width:220px;height:48px;font-size:15px">
+        ← Retour à la page précédente
+      </a>
+      <a href="/dashboard" class="btn btn-outline" style="min-width:220px;height:44px">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Espace administrateur
+      </a>
+      <a href="/agent/dashboard" class="btn btn-outline" style="min-width:220px;height:44px">
+        👤 Espace agent
+      </a>
+    </div>
+
+    <!-- Footer mini -->
+    <div style="margin-top:40px;font-size:12px;color:#d1d5db">
+      © <%= new Date().getFullYear() %> SAS Parking — Tous droits réservés
+    </div>
+  </div>
+
+</body>
+</html>
