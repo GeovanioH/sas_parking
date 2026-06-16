@@ -27,7 +27,12 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'sas_parking_secret_2026',
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 1000 * 60 * 60 * 24, httpOnly: true, sameSite: 'strict' }
+  cookie: {
+  maxAge: 1000 * 60 * 60 * 24,
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax'
+}
 }));
 
 // ─── Moteur de vues EJS ─────────────────────────
