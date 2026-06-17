@@ -12,7 +12,7 @@ const cron          = require('node-cron');
 const { lancerVirementsJournaliers } = require('./services/payoutService');
 
 const app = express();
-
+app.set('trust proxy' ,1);
 // ─── Corps des requêtes ─────────────────────────
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
