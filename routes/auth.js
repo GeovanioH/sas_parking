@@ -52,14 +52,22 @@ router.post('/admin', async (req, res) => {
     return res.render('auth/signup', { error: 'Le mot de passe doit contenir au moins 6 caractères.' });
   }
 
-  try {
-    const hash = await bcrypt.hash(mot_de_passe, SALT_ROUNDS);
-    await pool.query(
-      'INSERT INTO sites (nom_parking, ville, nom, prenom, telephone, mot_de_passe) VALUES ($1,$2,$3,$4,$5,$6)',
-      [nom_site.trim(), ville.trim(), nom.trim(), prenom.trim(), telephone.trim(), hash]
-    );
-    res.redirect('/login?success=Compte créé avec succès ! Connectez-vous.');
-  } catch (err) {
+try {
+  const hash = await bcrypt.hash(mot_de_passe, SALT_ROUNDS);
+  const { rows } = await pool.query(
+    'INSERT INTO sites (nom_parking, ville, nom, prenom, telephone, mot_de_passe) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id',
+    [nom_site.trim(), ville.trim(), nom.trim(), prenom.trim(), telephone.trim(), hash]
+  );
+
+  // Tarif par défaut : 100F au forfait "garde", actif dès la création du compte
+  await pool.query(
+    `INSERT INTO tarifs (site_id, prix_par_heure, prix_minimum, mode_tarifaire, prix_tarif, heure_debut, actif)
+     VALUES ($1, 0, 100, 'garde', 100, 0, TRUE)`,
+    [rows[0].id]
+  );
+
+  res.redirect('/login?success=Compte créé avec succès ! Connectez-vous.');
+} catch (err) {
     console.error(err);
     const msg = err.code === '23505'
       ? 'Ce numéro de téléphone est déjà utilisé.'

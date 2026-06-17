@@ -564,6 +564,7 @@ tbody tr:hover td { background: var(--teal-pale); }
 @media (max-width: 1024px) {
   .stats-grid  { grid-template-columns: repeat(2, 1fr); }
   .agents-grid { grid-template-columns: repeat(2, 1fr); }
+  .grid-3      { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 768px) {
   .sidebar { transform: translateX(-100%); }
@@ -573,6 +574,8 @@ tbody tr:hover td { background: var(--teal-pale); }
   .agents-grid     { grid-template-columns: 1fr; }
   .form-row        { grid-template-columns: 1fr; }
   .payment-options { grid-template-columns: 1fr; }
+  .grid-2          { grid-template-columns: 1fr; gap: 12px; }
+  .grid-3          { grid-template-columns: 1fr; gap: 12px; }
   .page-body { padding: 16px; }
   .topbar    { padding: 0 16px; }
   .menu-toggle {
@@ -580,11 +583,39 @@ tbody tr:hover td { background: var(--teal-pale); }
     background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-sm);
     padding: 8px; cursor: pointer; box-shadow: var(--shadow);
   }
+
+  /* Modales plein écran sur mobile */
+  .modal,
+  .modal-content {
+    max-width: 94vw !important;
+    width: 94vw !important;
+    margin: 0 auto;
+  }
+
+  /* Tableaux : cellules compactes (le scroll horizontal vient du wrapper) */
+  table { font-size: 13px; }
+  table th, table td { padding: 8px 10px; white-space: nowrap; }
+
+  /* Cartes statistiques : texte réduit pour éviter le débordement */
+  .stat-card { padding: 14px; }
+  .stat-card .stat-value { font-size: 20px; }
+
+  h1 { font-size: 22px; }
+  h2 { font-size: 18px; }
+}
+@media (max-width: 480px) {
+  .stats-grid  { grid-template-columns: 1fr; }
+  .agents-grid { grid-template-columns: 1fr; }
+  .page-body   { padding: 12px; }
+  .topbar      { padding: 0 12px; }
+  .card, .panel { padding: 14px; }
+  table { font-size: 12px; }
+  table th, table td { padding: 6px 8px; }
+  .btn { padding: 10px 14px; font-size: 14px; }
 }
 @media (min-width: 769px) {
   .menu-toggle { display: none; }
 }
-
 /* ── UTILITIES ───────────────────────────── */
 .text-green  { color: var(--green-dark); }
 .text-teal   { color: var(--teal-dark); }

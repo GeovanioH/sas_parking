@@ -277,6 +277,18 @@ CREATE TRIGGER trg_paiements_updated_at
 async function migrate() {
   try {
     await pool.query(SQL);
+
+    // Rattrapage : créer un tarif par défaut (100F, garde) pour les sites
+    // déjà existants qui n'ont encore aucun tarif actif configuré.
+    await pool.query(`
+      INSERT INTO tarifs (site_id, prix_par_heure, prix_minimum, mode_tarifaire, prix_tarif, heure_debut, actif)
+      SELECT s.id, 0, 100, 'garde', 100, 0, TRUE
+      FROM sites s
+      WHERE NOT EXISTS (
+        SELECT 1 FROM tarifs t WHERE t.site_id = s.id AND t.actif = TRUE
+      )
+    `);
+
     console.log('[DB] Tables PostgreSQL vérifiées / créées (v2.0).');
   } catch (err) {
     console.error('[DB] Erreur migration :', err.message);
