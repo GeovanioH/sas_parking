@@ -60,7 +60,6 @@
 html {
   font-size: 15px;
   scroll-behavior: smooth;
-  overflow-x: hidden
 }
 
 body {
@@ -68,7 +67,6 @@ body {
   background: var(--gray-100);
   color: var(--text);
   line-height: 1.6;
-  overflow-x: hidden;
   max-width: 100vw;
 }
 
@@ -1311,71 +1309,56 @@ tbody tr:hover td {
 /* ── STEPPER ─────────────────────────────── */
 .stepper {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 0;
   margin-bottom: 28px;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 .step-item {
-  display: flex;
-  align-items: center;
   flex: 1;
-}
-
-.step-circle {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 700;
-  flex-shrink: 0;
-  border: 2px solid var(--gray-200);
-  background: var(--white);
-  color: var(--gray-400);
-  transition: all var(--transition);
-}
-
-.step-circle.done {
-  background: var(--green);
-  border-color: var(--green);
-  color: white;
-}
-
-.step-circle.current {
-  border-color: var(--teal);
-  color: var(--teal-dark);
-  background: var(--teal-light);
-}
-
-.step-line {
-  flex: 1;
-  height: 2px;
-  background: var(--gray-200);
-}
-
-.step-line.done {
-  background: var(--teal);
-}
-
-.step-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--gray-400);
-  margin-top: 4px;
+  flex-direction: column;
+  padding: 16px;
   text-align: center;
+  border-right: 1px solid var(--gray-200);
+  background: var(--white);
 }
 
-.step-label.current {
-  color: var(--teal-dark);
+.step-item:last-child {
+  border-right: none;
 }
 
-.step-label.done {
+.step-item.step-active {
+  background: var(--green-pale);
+}
+
+.step-icon {
+  font-size: 20px;
+}
+
+.step-title {
+  font-weight: 700;
+  font-size: 13px;
+  margin-top: 4px;
+  color: var(--gray-300);
+}
+
+.step-item.step-active .step-title {
   color: var(--green-dark);
 }
 
+.step-item.step-done .step-title {
+  color: var(--gray-500);
+}
+
+.step-sub {
+  font-size: 11px;
+  color: var(--gray-400);
+}
 /* ── PAYMENT OPTIONS ─────────────────────── */
 .payment-options {
   display: grid;
@@ -1774,7 +1757,6 @@ tbody tr:hover td {
 
   .menu-toggle {
     display: flex;
-    position: fixed;
     top: 14px;
     left: 14px;
     z-index: 200;
@@ -1800,7 +1782,7 @@ tbody tr:hover td {
     flex-wrap: wrap;
     align-items: center;
     gap: 10px;
-    padding: 12px 16px 12px 60px;
+    padding: 12px 16px;
   }
 
   .topbar-left {
@@ -2118,7 +2100,7 @@ tbody tr:hover td {
   }
 
   .topbar {
-    padding: 10px 12px 10px 56px;
+    padding: 10px 12px;
   }
 
   .panel {
@@ -2177,6 +2159,22 @@ tbody tr:hover td {
     padding: 16px;
     font-size: 20px;
   }
+  .stepper {
+  flex-direction: column;
+}
+
+.step-item {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  border-right: none;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.step-item:last-child {
+  border-bottom: none;
+}
 }
 
 @media (min-width: 769px) {

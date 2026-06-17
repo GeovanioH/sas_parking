@@ -8,11 +8,12 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
-<button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+
 <div class="app-layout">
   <%- include('../composants/sidebar_admin', { page:'rapports', adminNom, adminPrenom }) %>
   <div class="main-content">
     <div class="topbar">
+  <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
       <div class="topbar-left">
         <div class="topbar-title">Rapports Financiers</div>
         <div class="topbar-sub">Analyse de performance — <%= adminSite %></div>

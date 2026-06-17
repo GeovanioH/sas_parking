@@ -11,7 +11,7 @@
 </head>
 
 <body>
-  <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+
 
   <div class="app-layout">
     <%- include('../composants/sidebar_agent', { page: 'sortie' , agentNom, agentPrenom, agentSite, agentVille }) %>
@@ -19,6 +19,7 @@
       <div class="main-content">
         <!-- TOPBAR -->
         <div class="topbar">
+          <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
           <div class="topbar-left">
             <div class="topbar-title">Traiter une Sortie</div>
             <div class="topbar-sub">Clôture de session de garde</div>
@@ -50,32 +51,25 @@
             <% } %>
 
               <!-- STEPPER -->
-              <div class="stepper"
-                style="display:flex;align-items:center;gap:0;margin-bottom:28px;background:white;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden">
-                <div class="step-item <%= !session ? 'active' : 'done' %>"
-                  style="flex:1;padding:16px;text-align:center;border-right:1px solid #e5e7eb;background:<%= !session ? '#f0fdf4' : '#f9fafb' %>">
-                  <div style="font-size:20px">
+              <div class="stepper">
+                <div class="step-item <%= !session ? 'step-active' : 'step-done' %>">
+                  <div class="step-icon">
                     <%= !session ? '🔍' : '✅' %>
                   </div>
-                  <div
-                    style="font-weight:700;font-size:13px;margin-top:4px;color:<%= !session ? '#15803d' : '#6b7280' %>">
-                    1. PLAQUE</div>
-                  <div style="font-size:11px;color:#9ca3af">Recherche du véhicule</div>
+                  <div class="step-title">1. PLAQUE</div>
+                  <div class="step-sub">Recherche du véhicule</div>
                 </div>
-                <div class="step-item <%= session ? 'active' : ''%>"
-                  style="flex:1;padding:16px;text-align:center;border-right:1px solid #e5e7eb;background:<%= session ? '#f0fdf4' : 'white' %>">
-                  <div style="font-size:20px">
+                <div class="step-item <%= session ? 'step-active' : '' %>">
+                  <div class="step-icon">
                     <%= session ? '💳' : '⏳' %>
                   </div>
-                  <div
-                    style="font-weight:700;font-size:13px;margin-top:4px;color:<%= session ? '#15803d' : '#d1d5db' %>">
-                    2. MODE</div>
-                  <div style="font-size:11px;color:#9ca3af">Mode de paiement</div>
+                  <div class="step-title">2. MODE</div>
+                  <div class="step-sub">Mode de paiement</div>
                 </div>
-                <div class="step-item" style="flex:1;padding:16px;text-align:center;background:white">
-                  <div style="font-size:20px">🎉</div>
-                  <div style="font-weight:700;font-size:13px;margin-top:4px;color:#d1d5db">3. CONFIRMATION</div>
-                  <div style="font-size:11px;color:#9ca3af">Clôture & reçu</div>
+                <div class="step-item">
+                  <div class="step-icon">🎉</div>
+                  <div class="step-title">3. CONFIRMATION</div>
+                  <div class="step-sub">Clôture & reçu</div>
                 </div>
               </div>
 
@@ -240,14 +234,12 @@
                           </div>
 
                           <% if (session) { %>
-  <button type="button" id="btnPayer" class="btn btn-primary btn-full"
-    style="height:52px;font-size:16px;font-weight:700"
-    data-session="<%= session.id %>"
-    data-montant="<%= montant %>"
-    data-mode="<%= session.mode || 'especes' %>">
-    Confirmer la sortie
-  </button>
-<% } %>
+                            <button type="button" id="btnPayer" class="btn btn-primary btn-full"
+                              style="height:52px;font-size:16px;font-weight:700" data-session="<%= session.id %>"
+                              data-montant="<%= montant %>" data-mode="<%= session.mode || 'especes' %>">
+                              Confirmer la sortie
+                            </button>
+                            <% } %>
                         </form>
 
                         <a href="/agent/sortie" class="btn btn-outline btn-full" style="margin-top:10px">
@@ -272,41 +264,41 @@
 
   <script src="/js/app.js"></script>
   <script>
-document.getElementById('btnPayer')?.addEventListener('click', function() {
-  const mode    = document.getElementById('modeInput').value;
-  const montant = <%= montant || 0 %>;
-const sessionId = <% if (session) { %><%= session.id %><% } else { %>0<% } %>;
-  if (mode === 'mobile') {
-    // Ouvrir widget FedaPay
-    FedaPay.init({
-      public_key: '<%= fedapayPublicKey %>',
-      transaction: {
-        amount:      montant,
-        description: 'Garde véhicule <%= session ? session.plaque : "" %>'
-      },
-      customer: {
-        phone_number: {
-          number:  '<%= session ? session.telephone_client : "" %>',
-          country: 'BJ'
+    document.getElementById('btnPayer')?.addEventListener('click', function () {
+      const mode = document.getElementById('modeInput').value;
+      const montant = <%= montant || 0 %>;
+      const sessionId = <% if (session) { %><%= session.id %><% } else { %> 0 <% } %>;
+      if (mode === 'mobile') {
+        // Ouvrir widget FedaPay
+        FedaPay.init({
+          public_key: '<%= fedapayPublicKey %>',
+          transaction: {
+            amount: montant,
+            description: 'Garde véhicule <%= session ? session.plaque : "" %>'
+          },
+          customer: {
+            phone_number: {
+              number: '<%= session ? session.telephone_client : "" %>',
+              country: 'BJ'
+            }
+          },
+          onComplete: function (resp) {
+            if (resp.reason === FedaPay.DIALOG_DISMISSED) {
+              alert('Paiement annulé.');
+              return;
+            }
+            // Soumettre le formulaire après paiement réussi
+            document.querySelector('form').submit();
+          }
+        }).open();
+      } else {
+        // Espèces — confirmation directe
+        if (confirm('Confirmer la clôture de cette session ?')) {
+          document.querySelector('form').submit();
         }
-      },
-      onComplete: function(resp) {
-        if (resp.reason === FedaPay.DIALOG_DISMISSED) {
-          alert('Paiement annulé.');
-          return;
-        }
-        // Soumettre le formulaire après paiement réussi
-        document.querySelector('form').submit();
       }
-    }).open();
-  } else {
-    // Espèces — confirmation directe
-    if (confirm('Confirmer la clôture de cette session ?')) {
-      document.querySelector('form').submit();
-    }
-  }
-});
-</script>
+    });
+  </script>
 </body>
 
 </html>

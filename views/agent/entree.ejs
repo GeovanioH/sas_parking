@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-<button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+
 
 <div class="app-layout">
   <%- include('../composants/sidebar_agent', { page: 'entree', agentNom, agentPrenom, agentSite, agentVille }) %>
@@ -15,6 +15,7 @@
   <div class="main-content">
     <!-- TOPBAR -->
     <div class="topbar">
+  <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
       <div class="topbar-left">
         <div class="topbar-title">Nouvelle Entrée</div>
         <div class="topbar-sub">Enregistrez l'arrivée d'un véhicule</div>

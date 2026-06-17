@@ -8,7 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
-<button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+
 
 <div class="app-layout">
   <%- include('../composants/sidebar_admin', { page: 'dashboard', adminNom, adminPrenom }) %>
@@ -16,6 +16,7 @@
   <div class="main-content">
     <!-- TOPBAR -->
     <div class="topbar">
+  <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
       <div class="topbar-left">
         <div class="topbar-title">Tableau de bord</div>
         <div class="topbar-sub"><%= new Date().toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' }) %></div>
