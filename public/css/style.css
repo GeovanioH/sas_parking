@@ -1745,39 +1745,56 @@ tbody tr:hover td {
 
 @media (max-width: 768px) {
 
-.topbar {
-  padding: 0 12px;
-  gap: 8px;
-  flex-wrap: nowrap;
-}
+  .topbar {
+    height: var(--topbar-h);
+    flex-wrap: nowrap;
+    align-items: center;
+    padding: 0 12px;
+    gap: 8px;
+  }
 
-.topbar-left {
-  flex: 1;
-  min-width: 0;
-}
+  .topbar-left {
+    flex: 1;
+    min-width: 0;
+    width: auto;
+  }
 
-.topbar-title {
-  font-size: 14px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+  .topbar-title {
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
-.topbar-sub {
-  font-size: 11px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+  .topbar-sub {
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
-.topbar-user-name,
-.topbar-user-role {
-  display: none;
-}
+  .topbar-right {
+    flex-shrink: 0;
+    width: auto;
+    justify-content: flex-end;
+  }
 
-.topbar-right {
-  flex-shrink: 0;
-}
+  .topbar-right .btn {
+    display: none;
+  }
+
+  .topbar-user {
+    flex: none;
+    min-width: 0;
+    max-width: none;
+    padding: 4px;
+    gap: 0;
+  }
+
+  .topbar-user-name,
+  .topbar-user-role {
+    display: none;
+  }
   /* ── Structure générale ── */
   .sidebar {
     transform: translateX(-100%);
