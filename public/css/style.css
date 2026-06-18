@@ -1737,7 +1737,40 @@ tbody tr:hover td {
 }
 
 @media (max-width: 768px) {
+  
+.topbar {
+  padding: 0 12px;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
 
+.topbar-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.topbar-title {
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar-sub {
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar-user-name,
+.topbar-user-role {
+  display: none;
+}
+
+.topbar-right {
+  flex-shrink: 0;
+}
   /* ── Structure générale ── */
   .sidebar {
     transform: translateX(-100%);
@@ -1748,7 +1781,11 @@ tbody tr:hover td {
   }
 
   .main-content {
-    margin-left: 0;
+     margin-left: 0 !important;
+  min-width: 0;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
   }
 
   .page-body {
