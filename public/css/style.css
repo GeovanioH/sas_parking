@@ -1751,7 +1751,6 @@ tbody tr:hover td {
     align-items: center;
     padding: 0 12px;
     gap: 8px;
-    background: red !important;
   }
 
   .topbar-left {
