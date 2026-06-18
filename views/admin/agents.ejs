@@ -12,7 +12,7 @@
   <%- include('../composants/sidebar_admin', { page:'agents', adminNom, adminPrenom }) %>
   <div class="main-content">
     <div class="topbar">
-  <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
       <div class="topbar-left">
         <div class="topbar-title">Équipe d'Agents</div>
         <div class="topbar-sub"><%= new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) %></div>
@@ -28,6 +28,7 @@
     <div class="page-body">
       <% if (error)   { %><div class="alert alert-error   alert-auto-dismiss"><span>⚠️</span><span><%= error %></span></div><% } %>
       <% if (success) { %><div class="alert alert-success alert-auto-dismiss"><span>✅</span><span><%= success %></span></div><% } %>
+       <button class="btn btn-primary btn-mobile-action" onclick="openModal('modalAjout')">+ Ajouter un agent</button>
 
       <!-- Recherche -->
       <form method="GET" action="/agents" class="search-bar">
