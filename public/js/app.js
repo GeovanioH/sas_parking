@@ -276,32 +276,3 @@ window.initBarChart = function(canvasId, data) {
 document.addEventListener('DOMContentLoaded', () => {
   initKeypad?.();
 });
-
-
-
-// ─── 🔴 DÉTECTEUR DE DÉBORDEMENT (temporaire — à retirer une fois le bug trouvé) ───
-window.addEventListener('load', () => {
-  const vw = document.documentElement.clientWidth;
-  const coupables = [];
-  document.querySelectorAll('body *').forEach(el => {
-    const r = el.getBoundingClientRect();
-    if (r.right > vw + 1 && r.width > 0) coupables.push({ el, depasse: Math.round(r.right - vw) });
-  });
-  if (coupables.length === 0) return;
-  coupables.sort((a, b) => b.depasse - a.depasse);
-  coupables.slice(0, 5).forEach(c => c.el.style.outline = '3px solid red');
-  const top = coupables[0];
-  const bandeau = document.createElement('div');
-  bandeau.textContent = `⚠️ Déborde de ${top.depasse}px : <${top.el.tagName.toLowerCase()} class="${top.el.className}">`;
-  bandeau.style.position = 'fixed';
-  bandeau.style.bottom = '0';
-  bandeau.style.left = '0';
-  bandeau.style.right = '0';
-  bandeau.style.background = '#dc2626';
-  bandeau.style.color = '#fff';
-  bandeau.style.fontSize = '11px';
-  bandeau.style.padding = '8px';
-  bandeau.style.zIndex = '99999';
-  bandeau.style.wordBreak = 'break-all';
-  document.body.appendChild(bandeau);
-});
